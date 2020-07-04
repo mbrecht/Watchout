@@ -11,6 +11,7 @@ class Watchout {
         this.time = this.date.getTime();
         this.score = 0;
         this.highScore = 0;
+        this.collisionDetected = false;
 
         // Capture available width and height for more intuitive use later
         this.width = window.innerWidth;
@@ -26,9 +27,37 @@ class Watchout {
 
     // Main game loop
     run() {
-        this.handleInput();
+        this.checkCollisions();
         this.update();
         window.requestAnimationFrame(() => { this.run(); });
+    }
+
+    checkCollisions() {
+        let playerBox = {
+            x: this.player.x,
+            y: this.player.y,
+            width: 50,
+            height: 50
+        };
+
+        let enemyBox = {
+            x: undefined,
+            y: undefined,
+            width: 25,
+            height: 25
+        };
+
+        for(let i = 0; i < this.maxEnemies; i++) {
+            enemyBox.x = this.enemies[i].x;
+            enemyBox.y = this.enemies[i].y;
+
+            if(enemyBox.x > playerBox.x && enemyBox.x < playerBox.x + playerBox.width) {
+                if(enemyBox.y > playerBox.y && enemyBox.y < playerBox.y + playerBox.height) {
+                    console.log('collision detected');
+                    this.collisionDetected = true;
+                }
+            }
+        }
     }
 
     update() {
@@ -49,10 +78,6 @@ class Watchout {
         }
 
         this.updateScore();
-    } 
-
-    handleInput() {
-
     }
 
     // Generate array of enemies
@@ -75,6 +100,7 @@ class Watchout {
     }
 
     updateScore() {
+        if(this.collisionDetected) {this.score = 0; this.collisionDetected = false};
         if(this.score > this.highScore) { this.highScore = this.score };
         d3.select('#current-score').text(`Current Score: ${this.score}`);
         d3.select('#high-score').text(`High Score: ${this.highScore}`);
