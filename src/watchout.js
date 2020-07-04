@@ -12,14 +12,16 @@ class Watchout {
         this.score = 0;
         this.highScore = 0;
         this.collisionDetected = false;
+        this.FPS = 60
 
         // Capture available width and height for more intuitive use later
         this.width = window.innerWidth;
         this.height = window.innerHeight;
 
         // Generate enemies
-        this.maxEnemies = 10;
+        this.maxEnemies = 20;
         this.enemies = this.generateEnemies();
+        this.updateEnemyPos();
 
         // Generate Player, and set position to center of screen
         this.player = new Player(this.width / 2, this.height / 2);
@@ -27,35 +29,25 @@ class Watchout {
 
     // Main game loop
     run() {
-        this.checkCollisions();
         this.update();
         window.requestAnimationFrame(() => { this.run(); });
     }
 
     checkCollisions() {
-        let playerBox = {
-            x: this.player.x,
-            y: this.player.y,
-            width: 50,
-            height: 50
-        };
-
-        let enemyBox = {
-            x: undefined,
-            y: undefined,
-            width: 25,
-            height: 25
-        };
-
         for(let i = 0; i < this.maxEnemies; i++) {
-            enemyBox.x = this.enemies[i].x;
-            enemyBox.y = this.enemies[i].y;
-
-            if(enemyBox.x > playerBox.x && enemyBox.x < playerBox.x + playerBox.width) {
-                if(enemyBox.y > playerBox.y && enemyBox.y < playerBox.y + playerBox.height) {
-                    console.log('collision detected');
-                    this.collisionDetected = true;
-                }
+            let radius1 = 25;
+            let radius2 = 15;
+            let x1 = this.player.x - (radius1 * 1.5);
+            let x2 = this.enemies[i].pos.x;
+            let y1 = this.player.y - (radius1 * 1.5);
+            let y2 = this.enemies[i].pos.y;
+            
+            if ( Math.sqrt( ( x2-x1 ) * ( x2-x1 )  + ( y2-y1 ) * ( y2-y1 ) ) < ( radius1 + radius2 ) ) 
+            {
+                this.collisionDetected = true;
+                break;
+            } else {
+                this.collisionDetected = false;
             }
         }
     }
@@ -63,6 +55,9 @@ class Watchout {
     update() {
         this.date = new Date();
         let currentTime = this.date.getTime();
+        let delta = ((currentTime - this.time) / 1000);
+
+
 
         d3.select('#time')
             .text(`Time: ${this.time}`);
@@ -71,13 +66,17 @@ class Watchout {
         d3.select('#difference')
             .text(`Difference: ${currentTime - this.time}`);
 
-        if(currentTime - this.time > 1000) {
+        if(delta >= 0.995) {
             this.time = currentTime;
-            this.updateEnemies();
+            this.updateEnemyPos();
             this.score++;
+            delta = 1;
         }
 
+        this.updateEnemies(delta);
         this.updateScore();
+        this.checkCollisions();
+
     }
 
     // Generate array of enemies
@@ -92,7 +91,13 @@ class Watchout {
         return enemies;
     }
 
-    updateEnemies() {
+    updateEnemies(delta) {
+        for(let i = 0; i < this.maxEnemies; i++) {
+            this.enemies[i].move(delta);
+        }
+    }
+
+    updateEnemyPos() {
         for(let i = 0; i < this.maxEnemies; i++) {
             let pos = this.randomPos();
             this.enemies[i].updatePosition(pos);
@@ -110,17 +115,26 @@ class Watchout {
         let pos = {};
         pos.x = Math.floor(Math.random() * (this.width - 30));
         pos.y = Math.floor(Math.random() * (this.height - 30));
+
         return pos;
+    }
+
+    // Shamelessly stolen from MDN
+    circleCollision(circle1, circle2) {
     }
 }
 
 class Enemy {
     constructor(pos, id) {
-        this.x = pos.x;
-        this.y = pos.y;
+        // Position objects
+        this.pos = {...pos};
+        this.lastPos = {...pos};
+        this.nextPos = {...pos};
         this.id = id;
         this.createElement();
         this.initPosition();
+
+        this.print = true;
     }
 
     createElement() {
@@ -139,18 +153,31 @@ class Enemy {
     initPosition() {
         d3.select(`#enemy${this.id}`)
             .style('position', 'absolute')
-            .style('left', `${this.x}`)
-            .style('top', `${this.y}`);
+            .style('left', `${this.pos.x}`)
+            .style('top', `${this.pos.y}`);
     }
 
     updatePosition(pos) {
-        this.x = pos.x;
-        this.y = pos.y;
+        this.lastPos = {x: this.pos.x, y: this.pos.y};
+        this.nextPos = {...pos};
+    }
+
+    move(delta) {
+        if(delta === 1) {
+            this.pos = {...this.lastPos}
+        } else {
+            this.pos.x = Math.floor(this.lerp(this.lastPos.x, this.nextPos.x, delta));
+            this.pos.y = Math.floor(this.lerp(this.lastPos.y, this.nextPos.y, delta));
+        }
 
         d3.select(`#enemy${this.id}`)
-            .style('left', `${this.x}`)
-            .style('top', `${this.y}`)
-            .style('transition', 'all 500ms ease-in-out');
+            .style('left', `${this.pos.x}`)
+            .style('top', `${this.pos.y}`)
+    }
+    
+    // Shamelessly stolen from Wikipedia
+    lerp(v0, v1, t) {
+        return v0 * (1-t) + v1 * t;
     }
 }
 
