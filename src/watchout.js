@@ -15,7 +15,7 @@ class Watchout {
         this.height = window.innerHeight;
 
         // Generate enemies
-        this.maxEnemies = 20;
+        this.maxEnemies = 10;
         this.enemies = this.generateEnemies();
 
         // Generate Player, and set position to center of screen
@@ -147,8 +147,6 @@ class Player {
     }
 
     clickPlayer(event) {
-        let player = this;
-        console.log('player: ', player);
         event = event || window.event;
         event.preventDefault();
         document.onmouseup = this.stopMoving;
@@ -158,8 +156,20 @@ class Player {
     movePlayer(event) {
         event = event || window.event;
         event.preventDefault();
-        this.x = event.clientX + 25;
-        this.y = event.clientY + 25;
+        if(event.clientX < 0) {
+            this.x = 25;
+        } else if(event.clientX > window.width) {
+            this.x = window.width + 25;
+        } else {
+            this.x = event.clientX + 25;
+        }
+        if(event.clientY < 0) {
+            this.y = 25;
+        } else if(event.clientY > window.height) {
+            this.y = window.height + 25;
+        } else {
+            this.y = event.clientY + 25;
+        }
         this.updatePosition();
     }
 
