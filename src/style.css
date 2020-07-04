@@ -1,0 +1,14 @@
+#scoreboard {
+    background-color: #444;
+    color: white;
+    position: absolute;
+    top: 5vh;
+    right: 5vh;
+    width: 25vw;
+    height: 15vh;
+    font-size: 1.5em;
+}
+
+#score-title {
+    text-align: center;
+}

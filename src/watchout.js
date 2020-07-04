@@ -9,6 +9,8 @@ class Watchout {
         this.running = true;
         this.date = new Date();
         this.time = this.date.getTime();
+        this.score = 0;
+        this.highScore = 0;
 
         // Capture available width and height for more intuitive use later
         this.width = window.innerWidth;
@@ -43,7 +45,10 @@ class Watchout {
         if(currentTime - this.time > 1000) {
             this.time = currentTime;
             this.updateEnemies();
+            this.score++;
         }
+
+        this.updateScore();
     } 
 
     handleInput() {
@@ -67,6 +72,12 @@ class Watchout {
             let pos = this.randomPos();
             this.enemies[i].updatePosition(pos);
         }
+    }
+
+    updateScore() {
+        if(this.score > this.highScore) { this.highScore = this.score };
+        d3.select('#current-score').text(`Current Score: ${this.score}`);
+        d3.select('#high-score').text(`High Score: ${this.highScore}`);
     }
 
     randomPos() {
