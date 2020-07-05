@@ -12,7 +12,8 @@ class Watchout {
         this.score = 0;
         this.highScore = 0;
         this.collisionDetected = false;
-        this.FPS = 60
+        this.playerRadius = 25;
+        this.enemyRadius = 15;
 
         // Capture available width and height for more intuitive use later
         this.width = window.innerWidth;
@@ -24,7 +25,7 @@ class Watchout {
         this.updateEnemyPos();
 
         // Generate Player, and set position to center of screen
-        this.player = new Player(this.width / 2, this.height / 2);
+        this.player = new Player(this.width / 2, this.height / 2, this.playerRadius);
     }
 
     // Main game loop
@@ -36,7 +37,7 @@ class Watchout {
     checkCollisions() {
         for(let i = 0; i < this.maxEnemies; i++) {
             let radius1 = 25;
-            let radius2 = 15;
+            let radius2 = this.enemies[i].radius;
             let x1 = this.player.x - (radius1 * 1.5);
             let x2 = this.enemies[i].pos.x;
             let y1 = this.player.y - (radius1 * 1.5);
@@ -85,7 +86,7 @@ class Watchout {
 
         for(let i = 0; i < this.maxEnemies; i++) {
             let pos = this.randomPos();
-            enemies.push(new Enemy(pos, i));
+            enemies.push(new Enemy(pos, this.enemyRadius, i));
         }
 
         return enemies;
@@ -125,12 +126,13 @@ class Watchout {
 }
 
 class Enemy {
-    constructor(pos, id) {
+    constructor(pos, r, id) {
         // Position objects
         this.pos = {...pos};
         this.lastPos = {...pos};
         this.nextPos = {...pos};
         this.id = id;
+        this.radius = r;
         this.createElement();
         this.initPosition();
 
@@ -141,13 +143,14 @@ class Enemy {
         d3.select('body')
             .append('svg')
             .attr('id', `enemy${this.id}`)
-            .attr('width', 30)
-            .attr('height', 30)
+            .attr('width', this.radius * 2)
+            .attr('height', this.radius * 2)
             .append('circle')
-            .attr('cx', 15)
-            .attr('cy', 15)
-            .attr('r', 15)
-            .style('fill', 'black');
+            .attr('class', 'enemy')
+            .attr('cx', this.radius)
+            .attr('cy', this.radius)
+            .attr('r', this.radius)
+            .attr('fill', 'black');
     }
 
     initPosition() {
@@ -182,9 +185,10 @@ class Enemy {
 }
 
 class Player {
-    constructor(x, y) {
+    constructor(x, y, r) {
         this.x = x;
         this.y = y;
+        this.r = r;
         this.createElement();
         this.updatePosition();
     }
@@ -193,12 +197,12 @@ class Player {
         d3.select('body')
             .append('svg')
             .attr('id', 'player')
-            .attr('width', 50)
-            .attr('height', 50)
+            .attr('width', this.r * 2)
+            .attr('height', this.r * 2)
             .append('circle')
-            .attr('cx', 25)
-            .attr('cy', 25)
-            .attr('r', 25)
+            .attr('cx', this.r)
+            .attr('cy', this.r)
+            .attr('r', this.r)
             .style('fill', 'orange');
         document.getElementById('player').onmousedown = (e) => {this.clickPlayer(e)};
     }
